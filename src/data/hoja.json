@@ -1,0 +1,11 @@
+{"nombre":"Norak del valle gris","clase":"Mago","subclase":"","nivel":3,"px":0,"especie":"Goliath","trasfondo":"Ermitaño","alineamiento":"Caótico bueno",
+"ca":10,"caEscudo":false,"pg":{"act":20,"max":20,"temp":0},"dg":{"tipo":"d6","gastados":0},"muerte":{"ok":0,"bad":0},"inspiracion":false,
+"iniAjuste":0,"velocidad":"9 m","tamano":"2.2","percPasiva":12,
+"car":{"fue":16,"des":11,"con":14,"int":15,"sab":12,"car":9},"salv":{"fue":false,"des":false,"con":false,"int":true,"sab":true,"car":false},
+"hab":{"atletismo":1,"arcano":1,"investigacion":1,"religion":1,"medicina":1},
+"armas":[{"nombre":"Bastón","atq":"","dano":"1d6 o 1d8 Con.","notas":""}],
+"armadura":{"ligeras":true,"medias":false,"pesadas":false,"escudos":false},"armasComp":"- Bastón","herramientas":"- Una aguja que nunca se rompe","idiomas":"Común, gigante, elfo",
+"aptitud":"int","rasgosClase":"","atributosEspecie":"Constitución poderosa. Tienes ventaja en cualquier prueba de característica que hagas para poner fin al estado de agarrado. Además, al determinar tu capacidad de carga, cuentas como si tuvieras un tamaño una categoría superior.\n\nForma grande. A partir del nivel 5 de personaje, puedes cambiar de tamaño a Grande como acción adicional si estás en un lugar lo bastante espacioso. Esta transformación dura 10 minutos o hasta que le pongas fin (no requiere acción). Durante ese tiempo, tendrás ventaja en las pruebas de Fuerza y tu velocidad aumentará en 3 m. Cuando uses este atributo, no podrás volver a hacerlo hasta que finalices un descanso largo.","dotes":"",
+"aspecto":"","historia":"Ideal: El conocimiento debe compartirse para liberar a otros.\nVínculo: Descubrió un ritual antiguo de los gigantes.\nDefecto: A veces confunde visiones con la realidad.\nRasgo: Descubrimiento — Durante tu aislamiento encontraste un secreto que puede cambiar el mundo.",
+"equipo":[{"cant":1,"nombre":"Mochila"},{"cant":1,"nombre":"Libro adicional o de notas"},{"cant":1,"nombre":"Botella de tinta"},{"cant":1,"nombre":"Pluma"},{"cant":10,"nombre":"Hojas de pergamino"},{"cant":1,"nombre":"Pequeña bola de área"},{"cant":1,"nombre":"Pequeño cuchillo"},{"cant":1,"nombre":"Kit de herborista"},{"cant":1,"nombre":"Ungüento para quitar la parálisis"}],
+"sint":["","",""],"monedas":{"pc":0,"pp":0,"pe":0,"po":0,"ppt":0},"bitacora":[]}
