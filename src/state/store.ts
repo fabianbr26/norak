@@ -3,7 +3,8 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { BYID, type Conjuro } from "../data/spells";
 import {
-  applyDamage, applyHeal, arcaneRecovery, clampLevel, damageText, preparedMax, slotsMax,
+  applyDamage, applyHeal, arcaneRecovery, clampLevel, cloudJumpMax, costlyMaterial, damageText, hasMaterialInEquipment,
+  isDiviner, portentDice, preparedMax, rollD20, slotsMax,
 } from "../rules/wizard2024";
 import { blankGrim, blankSheet, merge, seedGrim, seedSheet } from "./defaults";
 import { setPath } from "./paths";
@@ -19,6 +20,7 @@ interface Acciones {
   editGrim: (fn: (g: Grimorio) => void) => void;
   replaceAll: (hoja: Hoja, grimorio: Grimorio) => void;
   markExported: () => void;
+  setAviso: (a: Meta["aviso"]) => void;
 
   damage: (n: number) => string;
   heal: (n: number) => string;
@@ -35,6 +37,13 @@ interface Acciones {
   deleteCustom: (id: string) => void;
   shortRest: () => string;
   longRest: () => string;
+
+  setPortent: (i: number, value: number | "") => void;
+  rollPortent: () => string;
+  togglePortent: (i: number) => string;
+  useCloudJump: () => string;
+  restoreCloudJump: () => void;
+  spendInspiration: () => string;
 }
 
 export type Estado = Datos & Acciones;
@@ -62,7 +71,7 @@ export const useStore = create<Estado>()(
       return {
         hoja: seedSheet(),
         grimorio: seedGrim(),
-        meta: { modificado: null, ultimoRespaldo: null },
+        meta: { modificado: null, ultimoRespaldo: null, aviso: null },
 
         setHoja: (path, value) => edit(s => setPath(s.hoja, path, value)),
         editHoja: fn => edit(s => fn(s.hoja)),
@@ -72,6 +81,7 @@ export const useStore = create<Estado>()(
           s.grimorio = merge(blankGrim(), grimorio);
         }),
         markExported: () => set(s => { s.meta.ultimoRespaldo = now(); }),
+        setAviso: a => set(s => { s.meta.aviso = a; }),
 
         damage: n => {
           edit(s => { s.hoja.pg = applyDamage(s.hoja.pg, n); });
@@ -106,6 +116,9 @@ export const useStore = create<Estado>()(
               g.usados[slot] = (Number(g.usados[slot]) || 0) + 1;
               msg = `Lanzaste ${sp.n} con un espacio de nivel ${slot}.${sp.dm ? " " + damageText(sp, slot, lvl) + "." : ""}`;
             }
+            const mat = costlyMaterial(sp.m);
+            if (sp.l > 0 && mat && !hasMaterialInEquipment(mat.keyword, s.hoja.equipo))
+              msg += ` Ojo: el material cuesta ${mat.cost} po (${sp.m}) y no lo veo en tu equipo.`;
             if (sp.conc) {
               const prev = g.conc && g.conc !== sp.id ? findSpell(g, g.conc) : undefined;
               g.conc = sp.id;
@@ -169,17 +182,62 @@ export const useStore = create<Estado>()(
           edit(s => {
             const g = s.grimorio, h = s.hoja;
             g.usados = {}; g.conc = null; g.recuperado = false; g.registro = [];
+            const n = portentDice(levelOf(h));
+            g.portento = { dados: Array(n).fill(""), usados: Array(n).fill(false) };
+            g.saltoUsados = 0;
             logIt(g, "Descanso largo: espacios, PG y dados de golpe restaurados.");
             if (h.pg.max) h.pg.act = h.pg.max;
             h.pg.temp = 0; h.dg.gastados = 0; h.muerte = { ok: 0, bad: 0 };
           });
-          return "Despiertas descansado. Elige tus conjuros preparados para hoy.";
+          const portento = isDiviner(get().hoja.subclase) ? ` Tira tus ${portentDice(levelOf(get().hoja))} dados de Portento.` : "";
+          return `Despiertas descansado. Elige tus conjuros preparados para hoy.${portento}`;
+        },
+
+        setPortent: (i, value) => edit(s => {
+          const p = s.grimorio.portento;
+          p.dados[i] = value === "" ? "" : Math.max(1, Math.min(20, Math.floor(value)));
+          p.usados[i] = false;
+        }),
+        rollPortent: () => {
+          edit(s => {
+            const n = portentDice(levelOf(s.hoja));
+            s.grimorio.portento = { dados: Array.from({ length: n }, () => rollD20()), usados: Array(n).fill(false) };
+          });
+          const d = get().grimorio.portento.dados;
+          edit(s => logIt(s.grimorio, `Portento del día: ${d.join(" y ")}.`));
+          return `Tus visiones de hoy: ${d.join(" y ")}.`;
+        },
+        togglePortent: i => {
+          const p = get().grimorio.portento, v = p.dados[i];
+          if (v === "" || v === undefined) return "";
+          const usar = !p.usados[i];
+          edit(s => {
+            s.grimorio.portento.usados[i] = usar;
+            if (usar) logIt(s.grimorio, `Usaste Portento: ${v}`);
+          });
+          return usar ? `Usaste Portento: ${v}.` : `Portento ${v} disponible otra vez.`;
+        },
+        useCloudJump: () => {
+          const max = cloudJumpMax(levelOf(get().hoja));
+          if (get().grimorio.saltoUsados >= max) return "No te quedan usos de Salto de las nubes. Vuelven con el descanso largo.";
+          edit(s => {
+            s.grimorio.saltoUsados += 1;
+            logIt(s.grimorio, `Usaste Salto de las nubes (te quedan ${max - s.grimorio.saltoUsados}).`);
+          });
+          return `Salto de las nubes: te teletransportas hasta 9 m. Te quedan ${max - get().grimorio.saltoUsados}.`;
+        },
+        restoreCloudJump: () => edit(s => { s.grimorio.saltoUsados = Math.max(0, s.grimorio.saltoUsados - 1); }),
+        spendInspiration: () => {
+          if (!get().hoja.inspiracion) return "No tienes Inspiración heroica.";
+          edit(s => { s.hoja.inspiracion = false; logIt(s.grimorio, "Usaste Inspiración heroica."); });
+          return "Usaste Inspiración heroica: repite una tirada d20.";
         },
       };
     }),
     {
       name: STORAGE_KEY,
-      version: 1,
+      version: 2,
+      migrate: migrateSaved,
       storage: createJSONStorage(() => localStorage),
       partialize: s => ({ hoja: s.hoja, grimorio: s.grimorio, meta: s.meta }),
       merge: (persisted, current) => {
@@ -194,3 +252,17 @@ export const useStore = create<Estado>()(
     },
   ),
 );
+
+/**
+ * Migraciones de los datos guardados. v1 → v2: si Norak sigue en nivel 3 sin subclase, se marca
+ * un aviso para ofrecer la actualización de nivel 3 (no se cambia nada sin confirmar).
+ */
+export function migrateSaved(persisted: unknown, version: number): unknown {
+  const p = (persisted ?? {}) as { hoja?: Partial<Hoja>; meta?: Partial<Meta> };
+  if (version < 2 && p.hoja) {
+    const h = p.hoja;
+    const norak = /norak/i.test(h.nombre ?? "") && clampLevel(h.nivel) === 3 && !String(h.subclase ?? "").trim();
+    if (norak) p.meta = { ...p.meta, aviso: "nivel3" };
+  }
+  return p;
+}

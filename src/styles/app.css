@@ -127,3 +127,25 @@ dialog.modal .modal-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content
 
 /* Animaciones apagadas si el sistema lo pide (además de la regla global del prototipo) */
 @media (prefers-reduced-motion:reduce){.card .inner{transition:none}.spark{display:none}}
+
+/* ---------- aviso de actualización ---------- */
+.aviso{background:var(--parch);border:2px solid var(--gold);border-radius:8px;padding:14px 16px;margin:0 0 16px;box-shadow:0 8px 24px rgba(0,0,0,.45),inset 0 0 30px rgba(168,129,47,.18)}
+.aviso p{margin:0 0 10px}
+.aviso-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+
+/* ---------- rasgos del día (grimorio) ---------- */
+.rasgos{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:20px}
+.rasgo{border:1.5px solid var(--ink);border-radius:8px;padding:10px 12px;background:rgba(255,250,235,.25);min-width:0}
+.rasgo h3{margin:0 0 6px;font-family:var(--f-head);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);font-weight:700}
+.rasgo .calc-note{margin:6px 0 0}
+.rasgo > .btn{margin-top:8px}
+.portent{display:flex;gap:16px;flex-wrap:wrap}
+.portent-slot{display:flex;flex-direction:column;align-items:center;gap:4px}
+.portent-slot .ink{width:3.2em;text-align:center}
+.d20{width:58px;height:58px;border:0;padding:0;display:grid;place-items:center;font-family:var(--f-head);font-weight:700;font-size:1.35rem;color:#fbf1d8;
+  clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);background:radial-gradient(circle at 35% 30%,#3a5a9a,var(--arcane));transition:opacity .3s,filter .3s}
+.d20[aria-pressed="true"]{opacity:.38;filter:grayscale(1);text-decoration:line-through}
+.d20:disabled{background:rgba(80,52,24,.22);color:var(--ink-soft);cursor:default}
+.d20:focus-visible{outline:none;filter:drop-shadow(0 0 4px var(--arcane-glow)) brightness(1.15)}
+.gem.cloud{border-color:#6c7a8a;background:radial-gradient(circle at 30% 30%,#ffffff,#c9d6e6 45%,#7f93ab);box-shadow:0 0 10px rgba(200,215,235,.7)}
+.gem.cloud.spent{background:transparent;box-shadow:none;border-color:var(--ink-soft)}

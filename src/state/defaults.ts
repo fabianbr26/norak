@@ -14,6 +14,7 @@ export const blankSheet = (): Hoja => ({
 
 export const blankGrim = (): Grimorio => ({
   trucos: [], libro: [], preparados: [], usados: {}, extra: {}, conc: null, recuperado: false, registro: [], custom: [],
+  portento: { dados: ["", ""], usados: [false, false] }, saltoUsados: 0,
 });
 
 /** Mezcla datos guardados sobre los valores por defecto: conserva campos nuevos y acepta datos viejos. */

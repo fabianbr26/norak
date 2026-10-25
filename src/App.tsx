@@ -1,4 +1,5 @@
 import { BitacoraView } from "./components/bitacora/BitacoraView";
+import { AvisoNivel3 } from "./components/comunes/AvisoNivel3";
 import { BarraInferior, Encabezado } from "./components/comunes/Navegacion";
 import { Toast } from "./components/comunes/Toast";
 import { GrimorioView } from "./components/grimorio/GrimorioView";
@@ -11,6 +12,7 @@ export default function App() {
     <>
       <div className="wrap">
         <Encabezado />
+        <AvisoNivel3 />
         {tab === "hoja" && <HojaView />}
         {tab === "grimorio" && <GrimorioView />}
         {tab === "bitacora" && <BitacoraView />}

@@ -15,7 +15,7 @@ export function SubirNivel({ open, onClose }: { open: boolean; onClose: () => vo
 function Contenido({ onClose }: { onClose: () => void }) {
   const h = useStore(s => s.hoja);
   const levelUp = useStore(s => s.levelUp);
-  const plan = levelUpPlan(Number(h.nivel) || 1, h.car.con, h.especie);
+  const plan = levelUpPlan(Number(h.nivel) || 1, h.car.con, h.especie, h.subclase);
   const conMod = abilityMod(h.car.con);
   const [hp, setHp] = useState(String(plan?.hpAverage ?? 0));
   const [rolled, setRolled] = useState<number | null>(null);

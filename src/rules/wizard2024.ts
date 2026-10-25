@@ -171,8 +171,38 @@ export interface LevelUpPlan {
   changes: string[];
 }
 
+/* ---------- subclase Adivino y ascendencia goliath ---------- */
+export const isDiviner = (subclase: string) => /adivin/i.test(subclase);
+/** Portento: 2 d20 tras cada descanso largo; 3 desde nivel 14 (Gran portento). */
+export const portentDice = (level: number) => (clampLevel(level) >= 14 ? 3 : 2);
+export const rollD20 = (rand = Math.random) => 1 + Math.floor(rand() * 20);
+
+/** ¿Los atributos de especie incluyen Salto de las nubes (goliath, ascendencia gigante)? */
+export const hasCloudJump = (atributosEspecie: string) => /salto de las nubes/i.test(atributosEspecie);
+/** Usos de Salto de las nubes por descanso largo: el bonificador por competencia. */
+export const cloudJumpMax = (level: number) => profBonus(level);
+
+/* ---------- componentes materiales con costo ---------- */
+const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+const ARTICLES = new Set(["un", "una", "unos", "unas", "el", "la", "los", "las"]);
+
+/** Si el material tiene precio ("una perla de 100+ po"), devuelve su palabra clave y su costo. */
+export function costlyMaterial(m: string | undefined): { keyword: string; cost: number } | null {
+  if (!m) return null;
+  const price = /(\d+)\s*\+?\s*po\b/i.exec(m);
+  if (!price) return null;
+  const keyword = norm(m).split(/[^a-zñ]+/).find(w => w && !ARTICLES.has(w));
+  return keyword ? { keyword, cost: Number(price[1]) } : null;
+}
+
+/** ¿Hay en el equipo algo que coincida con el material con costo? */
+export function hasMaterialInEquipment(keyword: string, equipo: { nombre: string }[]) {
+  const k = norm(keyword);
+  return equipo.some(e => norm(e.nombre || "").includes(k));
+}
+
 /** Calcula qué cambia al pasar de `level` a `level + 1`. Devuelve null en nivel 20. */
-export function levelUpPlan(level: number, conScore: number | "", especie = ""): LevelUpPlan | null {
+export function levelUpPlan(level: number, conScore: number | "", especie = "", subclase = ""): LevelUpPlan | null {
   const from = clampLevel(level);
   if (from >= 20) return null;
   const to = from + 1;
@@ -201,6 +231,9 @@ export function levelUpPlan(level: number, conScore: number | "", especie = ""):
   if (plan.cantrips[1] > plan.cantrips[0]) ch.push(`Aprende un truco nuevo (ahora conoces ${plan.cantrips[1]}).`);
   if (ASI_LEVELS.includes(to)) ch.push(ASI_TEXT);
   ch.push(...(FEATURES[to] ?? []));
+  if (newLevel && isDiviner(subclase)) ch.push(`Sabio de la adivinación: copia gratis un conjuro de adivinación de nivel ${newLevel}.`);
+  if (to === 14 && isDiviner(subclase)) ch.push("Gran portento (Adivino 14): ahora tiras tres d20 para Portento.");
+  if (profBonus(to) > profBonus(from) && /goliat/i.test(especie)) c.push(`Salto de las nubes: ahora tienes ${profBonus(to)} usos por descanso largo.`);
   if (to === 5 && /goliat/i.test(especie)) ch.push("Goliath: obtienes Forma grande (acción adicional, 10 minutos, una vez por descanso largo).");
   return plan;
 }

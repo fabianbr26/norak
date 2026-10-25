@@ -1,18 +1,29 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { buildBackup, backupFileName, parseBackup } from "./backup";
 import { blankGrim, blankSheet, merge, seedGrim, seedSheet } from "./defaults";
+import { BYID } from "../data/spells";
 import { useStore } from "./store";
 
-const reset = () => useStore.setState({ hoja: seedSheet(), grimorio: seedGrim(), meta: { modificado: null, ultimoRespaldo: null } });
+const reset = () => useStore.setState({ hoja: seedSheet(), grimorio: seedGrim(), meta: { modificado: null, ultimoRespaldo: null, aviso: null } });
 
 describe("datos iniciales", () => {
-  it("cargan a Norak desde hoja.json y grimorio.json", () => {
+  it("cargan a Norak de nivel 3 (Adivino) desde hoja.json y grimorio.json", () => {
     const h = seedSheet(), g = seedGrim();
-    expect(h.nombre).toBe("Norak del valle gris");
+    expect(h.nombre).toBe("Norak del Valle Gris");
     expect(h.nivel).toBe(3);
+    expect(h.subclase).toBe("Adivino");
     expect(h.trasfondo).toBe("Ermitaño");
+    expect(h.velocidad).toBe("10,5 m");
+    expect(h.hab.arcano).toBe(2);
+    expect(h.hab.atletismo).toBeUndefined();
+    expect(h.armadura.ligeras).toBe(false);
+    expect(h.monedas.po).toBe(21);
+    expect(h.equipo.some(e => e.nombre === "Libro de conjuros")).toBe(true);
     expect(g.trucos).toHaveLength(3);
-    expect(g.preparados).toEqual(["rayo-nauseabundo", "dormir", "grasa", "sirviente-invisible"]);
+    expect(g.libro).toHaveLength(12);
+    expect(g.libro).toEqual(expect.arrayContaining(["identificar", "detectar-pensamientos"]));
+    expect(g.preparados).toEqual(["rayo-nauseabundo", "dormir", "grasa", "sirviente-invisible", "deteccion-de-la-magia", "telarana"]);
+    expect(g.libro.every(id => BYID[id])).toBe(true);
   });
   it("merge conserva campos nuevos y respeta los guardados", () => {
     const m = merge(blankSheet(), { nombre: "X", pg: { act: 5 } });
@@ -28,8 +39,8 @@ describe("respaldo", () => {
     const r = parseBackup(JSON.stringify(b));
     expect(r.ok).toBe(true);
     if (r.ok) {
-      expect(r.hoja.nombre).toBe("Norak del valle gris");
-      expect(r.grimorio.libro).toHaveLength(10);
+      expect(r.hoja.nombre).toBe("Norak del Valle Gris");
+      expect(r.grimorio.libro).toHaveLength(12);
       expect(r.modificado).toBe("2026-10-10T10:00:00.000Z");
     }
   });

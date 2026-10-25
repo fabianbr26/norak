@@ -16,6 +16,9 @@ interface UI {
   tab: Tab;
   sub: Sub;
   toast: { msg: string; id: number } | null;
+  /** ¿Hay una copia para «Deshacer» la última importación? */
+  undo: boolean;
+  setUndo: (v: boolean) => void;
   setTab: (t: Tab) => void;
   setSub: (s: Sub) => void;
   showToast: (msg: string) => void;
@@ -25,6 +28,8 @@ export const useUI = create<UI>()(set => ({
   tab: readTab(),
   sub: "hoy",
   toast: null,
+  undo: (() => { try { return !!localStorage.getItem("norak-v2:antes-de-importar"); } catch { return false; } })(),
+  setUndo: undo => set({ undo }),
   setTab: tab => {
     try { localStorage.setItem(TAB_KEY, tab); } catch { /* sin almacenamiento */ }
     set({ tab });

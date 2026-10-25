@@ -1,23 +1,18 @@
 import { useRef, useState } from "react";
 import { backupFileName, buildBackup, canShareFiles, deliverBackup, parseBackup, type ParseResult } from "../../state/backup";
-import { STORAGE_KEY, useStore } from "../../state/store";
-import { toast } from "../../state/ui";
+import { replaceWithUndo, undoReplace } from "../../state/importar";
+import { useStore } from "../../state/store";
+import { toast, useUI } from "../../state/ui";
 import { Modal } from "../comunes/Modal";
-
-const UNDO_KEY = STORAGE_KEY + ":antes-de-importar";
 
 const fmt = (iso: string | null) =>
   iso ? new Date(iso).toLocaleString("es-MX", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "nunca";
-
-function readUndo() {
-  try { return localStorage.getItem(UNDO_KEY); } catch { return null; }
-}
 
 export function Respaldo() {
   const meta = useStore(s => s.meta);
   const fileRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<Extract<ParseResult, { ok: true }> | null>(null);
-  const [undo, setUndo] = useState(readUndo);
+  const undo = useUI(s => s.undo);
   const share = canShareFiles();
 
   const exportar = async (mode: "download" | "share") => {
@@ -42,25 +37,13 @@ export function Respaldo() {
 
   const confirmImport = () => {
     if (!pending) return;
-    const { hoja, grimorio, meta, replaceAll } = useStore.getState();
-    try {
-      const prev = JSON.stringify(buildBackup(hoja, grimorio, meta.modificado));
-      localStorage.setItem(UNDO_KEY, prev);
-      setUndo(prev);
-    } catch { /* sin espacio para la copia de seguridad */ }
-    replaceAll(pending.hoja, pending.grimorio);
+    replaceWithUndo(pending.hoja, pending.grimorio);
     setPending(null);
     toast("Respaldo importado. Norak está al día en este dispositivo.");
   };
 
   const doUndo = () => {
-    if (!undo) return;
-    const r = parseBackup(undo);
-    if (!r.ok) return;
-    useStore.getState().replaceAll(r.hoja, r.grimorio);
-    try { localStorage.removeItem(UNDO_KEY); } catch { /* nada */ }
-    setUndo(null);
-    toast("Se restauraron los datos que tenías antes de importar.");
+    if (undoReplace()) toast("Se restauraron los datos que tenías antes de importar.");
   };
 
   const older = pending && pending.modificado && meta.modificado && pending.modificado < meta.modificado;

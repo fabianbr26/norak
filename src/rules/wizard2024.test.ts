@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { BYID, SPELLS } from "../data/spells";
 import {
   abilityMod, applyDamage, applyHeal, arcaneRecovery, arcaneRecoveryBudget, cantripsKnown, castOptions, clampLevel,
-  damageText, effectParts, hpAverageGain, levelUpPlan, passivePerception, preparedMax, profBonus, saveTotal,
+  cloudJumpMax, costlyMaterial, damageText, effectParts, hasCloudJump, hasMaterialInEquipment, isDiviner, portentDice, hpAverageGain, levelUpPlan, passivePerception, preparedMax, profBonus, saveTotal,
   skillTotal, slotTable, slotsLeft, slotsMax, spellAttack, spellDC, suggestedWeaponAttack, type Puntuaciones,
 } from "./wizard2024";
 
@@ -181,5 +181,35 @@ describe("subir de nivel", () => {
   });
   it("en nivel 20 no se puede subir", () => {
     expect(levelUpPlan(20, 14)).toBeNull();
+  });
+});
+
+describe("Adivino, goliath y materiales", () => {
+  it("detecta la subclase Adivino y los dados de Portento", () => {
+    expect(isDiviner("Adivino")).toBe(true);
+    expect(isDiviner("adivinación")).toBe(true);
+    expect(isDiviner("Evocador")).toBe(false);
+    expect([3, 13, 14].map(portentDice)).toEqual([2, 2, 3]);
+  });
+  it("Salto de las nubes: usos = competencia", () => {
+    expect(hasCloudJump("Ascendencia gigante: Salto de las nubes.")).toBe(true);
+    expect(hasCloudJump("Forma grande")).toBe(false);
+    expect([3, 4, 5, 9, 17].map(cloudJumpMax)).toEqual([2, 2, 3, 4, 6]);
+  });
+  it("Sabio de la adivinación al ganar un nivel nuevo de espacios", () => {
+    const sabio = (lv: number, sub = "Adivino") => levelUpPlan(lv, 14, "Goliath", sub)!.choices.find(c => c.startsWith("Sabio"));
+    expect(sabio(4)).toBe("Sabio de la adivinación: copia gratis un conjuro de adivinación de nivel 3.");
+    expect(sabio(2)).toBe("Sabio de la adivinación: copia gratis un conjuro de adivinación de nivel 2.");
+    expect(sabio(3)).toBeUndefined();
+    expect(sabio(4, "Evocador")).toBeUndefined();
+    expect(levelUpPlan(4, 14, "Goliath", "Adivino")!.changes).toContain("Salto de las nubes: ahora tienes 3 usos por descanso largo.");
+  });
+  it("materiales con costo", () => {
+    expect(costlyMaterial(BYID["identificar"].m)).toEqual({ keyword: "perla", cost: 100 });
+    expect(costlyMaterial(BYID["encontrar-familiar"].m)).toEqual({ keyword: "incienso", cost: 10 });
+    expect(costlyMaterial(BYID["dormir"].m)).toBeNull();
+    expect(costlyMaterial(undefined)).toBeNull();
+    expect(hasMaterialInEquipment("perla", [{ nombre: "Mochila" }, { nombre: "Perla negra" }])).toBe(true);
+    expect(hasMaterialInEquipment("perla", [{ nombre: "Mochila" }])).toBe(false);
   });
 });

@@ -43,6 +43,10 @@ export interface Grimorio {
   recuperado: boolean;
   registro: EntradaRegistro[];
   custom: Conjuro[];
+  /** Portento (Adivino): d20 tirados tras el descanso largo ("" = sin tirar) y cuáles ya se usaron */
+  portento: { dados: Num[]; usados: boolean[] };
+  /** Usos gastados de Salto de las nubes (goliath) desde el último descanso largo */
+  saltoUsados: number;
 }
 
 export interface Meta {
@@ -50,4 +54,6 @@ export interface Meta {
   modificado: string | null;
   /** ISO del último respaldo exportado desde este dispositivo */
   ultimoRespaldo: string | null;
+  /** Aviso pendiente al abrir la app (p. ej. la actualización de nivel 3 de Norak) */
+  aviso: "nivel3" | null;
 }
